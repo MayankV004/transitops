@@ -104,7 +104,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 };
 
 export const ROLE_COLORS: Record<Role, string> = {
-  FLEET_MANAGER: "#6366f1",   // indigo
+  FLEET_MANAGER: "#b48a58",   // brownish-beige
   DISPATCHER: "#0ea5e9",      // sky
   SAFETY_OFFICER: "#f59e0b",  // amber
   FINANCIAL_ANALYST: "#10b981", // emerald
