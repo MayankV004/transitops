@@ -19,6 +19,12 @@ declare global {
 const connectionString = `${process.env.DATABASE_URL}`;
 
 const adapter = new PrismaNeon({ connectionString });
+
+// Invalidate cached Prisma instance if it doesn't have the newly generated models
+if (global.prisma && !('depotSettings' in global.prisma)) {
+  global.prisma = undefined;
+}
+
 const prisma = global.prisma || new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV === 'development') global.prisma = prisma;

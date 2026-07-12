@@ -6,7 +6,6 @@ import { updateSettingsSchema, type UpdateSettingsInput } from "@/validations/se
 import { revalidatePath } from "next/cache";
 
 export async function getDepotSettings() {
-  await requireRole(["FLEET_MANAGER"]);
   
   // Upsert the singleton "default" row so it's auto-created if it doesn't exist
   return await prisma.depotSettings.upsert({
