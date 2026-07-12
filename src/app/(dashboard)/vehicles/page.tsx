@@ -17,9 +17,15 @@ export default async function VehiclesPage(props: {
 
   return (
     <div className="page-container">
-      <div className="top-bar">
-        <VehicleFilters />
-        {isManager && <AddVehicleModal />}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Fleet Registry</h1>
+          <p className="text-text-muted text-sm mt-1.5">Manage your vehicles, track odometer readings, and view acquisition costs.</p>
+        </div>
+        <div className="flex items-center gap-4 shrink-0">
+          <VehicleFilters />
+          {isManager && <AddVehicleModal />}
+        </div>
       </div>
 
       <div className="table-container">
