@@ -58,7 +58,7 @@ async function main() {
       driverId: d4.id,
       cargoWeight: 3500,
       plannedDistance: 450,
-      status: TripStatus.IN_TRANSIT,
+      status: TripStatus.DISPATCHED,
     }
   });
 
