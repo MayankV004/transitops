@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { loginSchema, registerSchema, type AuthFormState } from "@/validations/auth.schema";
 
@@ -32,6 +33,7 @@ export async function loginAction(
         email: parsed.data.email,
         password: parsed.data.password,
       },
+      headers: await headers(),
       asResponse: false,
     });
 
@@ -82,6 +84,7 @@ export async function registerAction(
         password: parsed.data.password,
         role: parsed.data.role, // Pass role to better-auth
       },
+      headers: await headers(),
       asResponse: false,
     });
 

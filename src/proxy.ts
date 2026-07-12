@@ -25,14 +25,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Use better-auth session check via cookie (no DB import in middleware)
   let session = null;
   try {
-    session = await auth.api.getSession({
-      headers: request.headers,
+    const res = await fetch(`${request.nextUrl.origin}/api/auth/get-session`, {
+      headers: {
+        cookie: request.headers.get("cookie") || "",
+      },
     });
-  } catch {
-    // If session check fails, treat as unauthenticated
+    if (res.ok) {
+      session = await res.json();
+    }
+  } catch (err) {
+    console.error("PROXY ERROR:", err);
   }
 
   // Redirect unauthenticated users away from protected routes
