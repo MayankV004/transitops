@@ -12,12 +12,45 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  FLEET_MANAGER
+  DISPATCHER
+  SAFETY_OFFICER
+  FINANCIAL_ANALYST
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  ON_TRIP
+  IN_SHOP
+  RETIRED
+}
+
+enum DriverStatus {
+  AVAILABLE
+  ON_TRIP
+  OFF_DUTY
+  SUSPENDED
+}
+
+enum TripStatus {
+  DRAFT
+  DISPATCHED
+  COMPLETED
+  CANCELLED
+}
+
+// ─── Better Auth tables ───────────────────────────────────────────────────────
+
 model User {
   id            String    @id
   name          String
   email         String
   emailVerified Boolean   @default(false)
   image         String?
+  role          Role      @default(DISPATCHER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
@@ -73,4 +106,96 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+// ─── Domain Models ────────────────────────────────────────────────────────────
+
+model Vehicle {
+  id              String          @id @default(cuid())
+  regNumber       String          @unique
+  name            String
+  type            String
+  maxLoadKg       Float
+  odometer        Float           @default(0)
+  acquisitionCost Float
+  status          VehicleStatus   @default(AVAILABLE)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  trips           Trip[]
+  maintenance     MaintenanceLog[]
+  fuelLogs        FuelLog[]
+  expenses        Expense[]
+}
+
+model Driver {
+  id               String       @id @default(cuid())
+  name             String
+  licenseNumber    String       @unique
+  licenseCategory  String
+  licenseExpiry    DateTime
+  contact          String
+  safetyScore      Float        @default(100)
+  status           DriverStatus @default(AVAILABLE)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  trips            Trip[]
+}
+
+model Trip {
+  id               String     @id @default(cuid())
+  source           String
+  destination      String
+  vehicleId        String
+  driverId         String
+  vehicle          Vehicle    @relation(fields: [vehicleId], references: [id])
+  driver           Driver     @relation(fields: [driverId], references: [id])
+  cargoWeight      Float
+  plannedDistance  Float
+  actualDistance   Float?
+  fuelConsumed     Float?
+  status           TripStatus @default(DRAFT)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  completedAt      DateTime?
+
+  @@index([vehicleId])
+  @@index([driverId])
+  @@index([status])
+}
+
+model MaintenanceLog {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+  description String
+  cost        Float
+  isActive    Boolean  @default(true) // true = vehicle is In Shop; closing sets false
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  closedAt    DateTime?
+
+  @@index([vehicleId])
+  @@index([isActive])
+}
+
+model FuelLog {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  liters    Float
+  cost      Float
+  date      DateTime @default(now())
+
+  @@index([vehicleId])
+}
+
+model Expense {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  type      String   // toll, misc, etc.
+  amount    Float
+  date      DateTime @default(now())
+
+  @@index([vehicleId])
 }
