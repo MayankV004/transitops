@@ -113,10 +113,10 @@ export function ExportPDFButton() {
       });
       v.maintenance.forEach((m) => {
         expensesBody.push([
-          new Date(m.date).toLocaleDateString(),
+          new Date(m.createdAt).toLocaleDateString(),
           v.regNumber,
           "Maintenance",
-          m.serviceType,
+          m.description,
           `$${m.cost.toLocaleString()}`
         ]);
       });

@@ -3,13 +3,13 @@
 import prisma from "@/lib/prisma";
 import { getSessionOrRedirect } from "@/lib/rbac";
 import { subMonths, subYears } from "date-fns";
-import type { Vehicle, Trip, Driver, FuelLog, Maintenance, Expense } from "@/generated/prisma/client";
+import type { Vehicle, Trip, Driver, FuelLog, MaintenanceLog, Expense } from "@/generated/prisma/client";
 
 export type ExportData = {
   vehicles: Array<Vehicle & {
     trips: Array<Trip & { driver: Driver | null }>;
     fuelLogs: Array<FuelLog>;
-    maintenance: Array<Maintenance>;
+    maintenance: Array<MaintenanceLog>;
     expenses: Array<Expense>;
   }>;
   summary: {
