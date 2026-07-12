@@ -105,31 +105,7 @@ export default function MaintenanceForm({ vehicles }: { vehicles: { id: string; 
         </button>
       </form>
 
-      <div className="mt-4 flex flex-col gap-3 font-medium text-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-[#22c55e]">Available</span>
-          <span className="text-[#94a3b8] flex-1 flex items-center justify-center relative px-2 text-[10px]">
-            <span className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-dashed border-[#94a3b8]"></span>
-              <svg className="w-3 h-3 text-[#94a3b8] -ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-            </span>
-            <span className="relative bg-[#000000] px-1 z-10 whitespace-nowrap">creating active record</span>
-          </span>
-          <span className="text-[#f97316]">In Shop</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[#f97316]">In Shop</span>
-          <span className="text-[#94a3b8] flex-1 flex items-center justify-center relative px-2 text-[10px]">
-            <span className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-dashed border-[#94a3b8]"></span>
-              <svg className="w-3 h-3 text-[#94a3b8] -ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-            </span>
-            <span className="relative bg-[#000000] px-1 z-10 whitespace-nowrap">closing record (not retired)</span>
-          </span>
-          <span className="text-[#22c55e]">Available</span>
-        </div>
-        <p className="text-[#f97316] text-xs mt-2 italic">Note: In Shop vehicles are removed from the dispatch pool.</p>
-      </div>
+     
     </div>
   );
 }
