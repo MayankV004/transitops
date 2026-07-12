@@ -34,33 +34,32 @@ export default async function ReportsPage() {
   const totalVehicles = await prisma.vehicle.count({ where: { status: { not: "RETIRED" } } });
   const activeVehicles = await prisma.vehicle.count({ where: { status: "ON_TRIP" } });
   
-  let totalDistance = 0;
-  let totalFuelLiters = 0;
-  let totalFuelCost = 0;
-  let totalMaintenanceCost = 0;
-  let totalAcquisitionCost = 0;
-  let totalExpenses = 0;
-
-  const vehicleCosts = vehicles.map((v) => {
+  const vehicleStats = vehicles.map((v) => {
     const vDistance = v.trips.reduce((acc, t) => acc + (t.actualDistance || t.plannedDistance || 0), 0);
     const vFuelLiters = v.fuelLogs.reduce((acc, f) => acc + f.liters, 0);
     const vFuelCost = v.fuelLogs.reduce((acc, f) => acc + f.cost, 0);
     const vMaintenanceCost = v.maintenance.reduce((acc, m) => acc + m.cost, 0);
     const vExpenses = v.expenses.reduce((acc, e) => acc + e.amount, 0);
     
-    totalDistance += vDistance;
-    totalFuelLiters += vFuelLiters;
-    totalFuelCost += vFuelCost;
-    totalMaintenanceCost += vMaintenanceCost;
-    totalAcquisitionCost += v.acquisitionCost;
-    totalExpenses += vExpenses;
-
     const totalCost = vFuelCost + vMaintenanceCost + vExpenses;
     return {
       regNumber: v.regNumber,
       totalCost,
+      vDistance,
+      vFuelLiters,
+      vFuelCost,
+      vMaintenanceCost,
+      vExpenses,
+      acquisitionCost: v.acquisitionCost
     };
   });
+
+  const totalDistance = vehicleStats.reduce((acc, v) => acc + v.vDistance, 0);
+  const totalFuelLiters = vehicleStats.reduce((acc, v) => acc + v.vFuelLiters, 0);
+  const totalFuelCost = vehicleStats.reduce((acc, v) => acc + v.vFuelCost, 0);
+  const totalMaintenanceCost = vehicleStats.reduce((acc, v) => acc + v.vMaintenanceCost, 0);
+  const totalAcquisitionCost = vehicleStats.reduce((acc, v) => acc + v.acquisitionCost, 0);
+  const totalExpenses = vehicleStats.reduce((acc, v) => acc + v.vExpenses, 0);
 
   // Calculate top-level metrics
   const fuelEfficiency = totalFuelLiters > 0 ? (totalDistance / totalFuelLiters).toFixed(1) : "0.0";
@@ -108,7 +107,7 @@ export default async function ReportsPage() {
   const maxRevenue = Math.max(...monthsData.map(m => m.revenue), 1000); // ensure at least > 0
 
   // Top costliest vehicles
-  const sortedVehicles = vehicleCosts.sort((a, b) => b.totalCost - a.totalCost).slice(0, 3);
+  const sortedVehicles = vehicleStats.sort((a, b) => b.totalCost - a.totalCost).slice(0, 3);
   const maxVehicleCost = sortedVehicles.length > 0 ? Math.max(sortedVehicles[0].totalCost, 1) : 1;
   const colors = ['bg-red-400', 'bg-orange-500', 'bg-blue-500'];
 
