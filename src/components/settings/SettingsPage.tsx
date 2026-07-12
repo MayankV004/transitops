@@ -46,7 +46,7 @@ export default function SettingsPage({ initialSettings }: SettingsPageProps) {
         router.refresh();
         setTimeout(() => setSuccess(false), 3000); // clear success msg after 3s
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
