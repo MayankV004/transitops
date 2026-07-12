@@ -1,12 +1,16 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { requireRole } from "@/lib/rbac";
+import { getSessionOrRedirect, requireRole } from "@/lib/rbac";
 import { updateSettingsSchema, type UpdateSettingsInput } from "@/validations/settings.schema";
 import { revalidatePath } from "next/cache";
 
+/**
+ * Read-only: returns depot settings for branding, currency, etc.
+ * Accessible to any authenticated user (called from layout).
+ */
 export async function getDepotSettings() {
-  await requireRole(["FLEET_MANAGER"]);
+  await getSessionOrRedirect();
   
   // Upsert the singleton "default" row so it's auto-created if it doesn't exist
   return await prisma.depotSettings.upsert({
