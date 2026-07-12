@@ -73,8 +73,8 @@ export async function createTrip(data: {
     
     revalidatePath("/trips");
     return { success: true, trip };
-  } catch (error: any) {
-    return { error: error.message };
+  } catch (error: unknown) {
+    return { error: error instanceof Error ? error.message : "Unknown error" };
   }
 }
 
@@ -117,8 +117,8 @@ export async function dispatchTrip(tripId: string) {
 
       return { success: true, trip: updatedTrip };
     });
-  } catch (error: any) {
-    return { error: error.message };
+  } catch (error: unknown) {
+    return { error: error instanceof Error ? error.message : "Unknown error" };
   } finally {
     revalidatePath("/trips");
     revalidatePath("/vehicles");
@@ -182,8 +182,8 @@ export async function completeTrip(tripId: string, finalOdometer: number, fuelCo
 
       return { success: true, trip: updatedTrip };
     });
-  } catch (error: any) {
-    return { error: error.message };
+  } catch (error: unknown) {
+    return { error: error instanceof Error ? error.message : "Unknown error" };
   } finally {
     revalidatePath("/trips");
     revalidatePath("/vehicles");
@@ -219,8 +219,8 @@ export async function cancelTrip(tripId: string) {
 
       return { success: true, trip: updatedTrip };
     });
-  } catch (error: any) {
-    return { error: error.message };
+  } catch (error: unknown) {
+    return { error: error instanceof Error ? error.message : "Unknown error" };
   } finally {
     revalidatePath("/trips");
     revalidatePath("/vehicles");

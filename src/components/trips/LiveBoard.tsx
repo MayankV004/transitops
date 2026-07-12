@@ -11,7 +11,18 @@ const statusColors = {
   CANCELLED: "bg-status-retired text-white border-transparent shadow-sm",
 };
 
-export default function LiveBoard({ trips }: { trips: any[] }) {
+interface TripWithRelations {
+  id: string;
+  status: string;
+  vehicleId: string;
+  driverId: string;
+  source: string;
+  destination: string;
+  vehicle: { regNumber: string; name?: string };
+  driver: { name: string };
+}
+
+export default function LiveBoard({ trips }: { trips: TripWithRelations[] }) {
   const [isPending, startTransition] = useTransition();
 
   const handleDispatch = (id: string) => {
@@ -39,7 +50,7 @@ export default function LiveBoard({ trips }: { trips: any[] }) {
 
     startTransition(async () => {
       const res = await completeTrip(id, Number(odo), Number(fuel));
-      if ((res as any)?.error) alert((res as any).error);
+      if (res && typeof res === 'object' && 'error' in res && typeof res.error === 'string') alert(res.error);
     });
   };
 

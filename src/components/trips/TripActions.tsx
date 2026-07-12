@@ -35,7 +35,7 @@ export default function TripActions({ tripId, status }: { tripId: string, status
 
     startTransition(async () => {
       const res = await completeTrip(tripId, Number(odo), Number(fuel));
-      if ((res as any)?.error) alert((res as any).error);
+      if (res && typeof res === 'object' && 'error' in res && typeof res.error === 'string') alert(res.error);
       router.refresh();
     });
   };
