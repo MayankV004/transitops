@@ -1,209 +1,297 @@
 import React from "react";
-import Link from "next/link";
+import { Search } from "lucide-react";
+import prisma from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { ROLE_LABELS } from "@/lib/rbac-client";
+import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
+import type { Prisma, VehicleStatus } from "@/generated/prisma/client";
 
-export default function DashboardPage() {
+export default async function DashboardPage(props: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+  const session = await auth.api.getSession({ headers: await headers() });
+  const user = session?.user as { id: string; name: string; email: string; role?: string } | undefined;
+  
+  const userName = user?.name || "Guest User";
+  const userRole = (user?.role || "DISPATCHER") as keyof typeof ROLE_LABELS;
+  const roleDisplay = ROLE_LABELS[userRole] || userRole;
+  const initials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+
+  const typeFilter = searchParams.type;
+  const statusFilter = searchParams.status;
+  
+  const vehicleWhere: Prisma.VehicleWhereInput = {};
+  if (typeFilter && typeFilter !== "All") {
+    vehicleWhere.type = typeFilter;
+  }
+  if (statusFilter && statusFilter !== "All") {
+    vehicleWhere.status = statusFilter as VehicleStatus;
+  }
+  
+  const tripWhere: Prisma.TripWhereInput = {};
+  if (Object.keys(vehicleWhere).length > 0) {
+    tripWhere.vehicle = vehicleWhere;
+  }
+
+  const [
+    totalVehicles,
+    availableVehicles,
+    maintenanceVehicles,
+    activeTripsCount,
+    pendingTripsCount,
+    driversOnDutyCount,
+    recentTrips,
+    vehiclesByStatus
+  ] = await Promise.all([
+    prisma.vehicle.count({ where: { ...vehicleWhere, status: vehicleWhere.status || { not: "RETIRED" } } }),
+    prisma.vehicle.count({ where: { ...vehicleWhere, status: "AVAILABLE" } }),
+    prisma.vehicle.count({ where: { ...vehicleWhere, status: "IN_SHOP" } }),
+    prisma.trip.count({ where: { ...tripWhere, status: "DISPATCHED" } }),
+    prisma.trip.count({ where: { ...tripWhere, status: "DRAFT" } }),
+    prisma.driver.count({ where: { status: "ON_TRIP" } }),
+    prisma.trip.findMany({
+      take: 5,
+      where: tripWhere,
+      orderBy: { createdAt: "desc" },
+      include: {
+        vehicle: true,
+        driver: true,
+      },
+    }),
+    prisma.vehicle.groupBy({
+      by: ["status"],
+      where: vehicleWhere,
+      _count: {
+        id: true,
+      },
+    }),
+  ]);
+
+  const fleetUtilization = totalVehicles > 0 ? Math.round((activeTripsCount / totalVehicles) * 100) : 0;
+
+  let availableCount = 0;
+  let onTripCount = 0;
+  let inShopCount = 0;
+  let retiredCount = 0;
+
+  vehiclesByStatus.forEach((v) => {
+    if (v.status === "AVAILABLE") availableCount = v._count.id;
+    if (v.status === "ON_TRIP") onTripCount = v._count.id;
+    if (v.status === "IN_SHOP") inShopCount = v._count.id;
+    if (v.status === "RETIRED") retiredCount = v._count.id;
+  });
+
+  const totalStatusCount = availableCount + onTripCount + inShopCount + retiredCount;
+  const getPct = (count: number) => (totalStatusCount > 0 ? (count / totalStatusCount) * 100 : 0);
+
+  const getTripStatusColor = (status: string) => {
+    switch (status) {
+      case "DISPATCHED":
+        return "bg-[#3b82f6] text-white";
+      case "COMPLETED":
+        return "bg-[#22c55e] text-white";
+      case "CANCELLED":
+        return "bg-red-500 text-white";
+      case "DRAFT":
+      default:
+        return "bg-gray-600 text-white";
+    }
+  };
+
+  const getTripStatusLabel = (status: string) => {
+    switch (status) {
+      case "DISPATCHED":
+        return "Dispatched";
+      case "COMPLETED":
+        return "Completed";
+      case "CANCELLED":
+        return "Cancelled";
+      case "DRAFT":
+      default:
+        return "Draft";
+    }
+  };
+
   return (
-    <div className="page-container">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard Overview</h1>
-          <p className="text-text-muted text-sm mt-1.5">Welcome back. Here is what is happening with your fleet today.</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="rounded-md bg-white px-4 py-2 text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
-            Generate Report
-          </button>
-          <Link href="/trips/new" className="rounded-md bg-[#A05C00] px-4 py-2 text-sm font-medium text-white hover:bg-[#8A5000] transition-colors shadow-sm">
-            + New Dispatch
-          </Link>
+    <div className="p-6 max-w-full">
+      {/* Top Bar matching the image */}
+      <div className="flex justify-end items-center mb-8">
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-400">{userName}</span>
+          <span className="px-3 py-1 bg-[#1e293b] text-blue-400 border border-blue-900/50 rounded-full text-xs font-medium flex items-center gap-2">
+            {roleDisplay} <span className="bg-blue-500/20 text-blue-400 rounded-full w-5 h-5 flex items-center justify-center text-[10px]">{initials}</span>
+          </span>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-white tracking-wide mb-6">Dashboard</h1>
         
-        {/* Card 1 */}
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Fleet Utilization</h3>
-            <div className="p-2 bg-[#B38645]/10 rounded-lg">
-              <svg className="w-5 h-5 text-[#A05C00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-              </svg>
+        {/* Filters */}
+        <div className="mb-6">
+          <h3 className="text-[10px] uppercase text-gray-500 tracking-widest mb-2 font-semibold">Filters</h3>
+          <DashboardFilters />
+        </div>
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-10">
+          
+          <div className="bg-[#121212] border border-gray-800 rounded-sm p-4 relative overflow-hidden flex flex-col justify-between min-h-[90px]">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+            <h3 className="text-[10px] uppercase text-gray-500 tracking-wider font-semibold pl-2">Active Vehicles</h3>
+            <p className="text-2xl text-white font-medium pl-2 mt-2">
+              {totalVehicles.toString().padStart(2, '0')}
+            </p>
+          </div>
+
+          <div className="bg-[#121212] border border-gray-800 rounded-sm p-4 relative overflow-hidden flex flex-col justify-between min-h-[90px]">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500"></div>
+            <h3 className="text-[10px] uppercase text-gray-500 tracking-wider font-semibold pl-2">Available Vehicles</h3>
+            <p className="text-2xl text-white font-medium pl-2 mt-2">
+              {availableVehicles.toString().padStart(2, '0')}
+            </p>
+          </div>
+
+          <div className="bg-[#121212] border border-gray-800 rounded-sm p-4 relative overflow-hidden flex flex-col justify-between min-h-[90px]">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500"></div>
+            <h3 className="text-[10px] uppercase text-gray-500 tracking-wider font-semibold pl-2">Vehicles In Maintenance</h3>
+            <p className="text-2xl text-white font-medium pl-2 mt-2">
+              {maintenanceVehicles.toString().padStart(2, '0')}
+            </p>
+          </div>
+
+          <div className="bg-[#121212] border border-gray-800 rounded-sm p-4 relative overflow-hidden flex flex-col justify-between min-h-[90px]">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+            <h3 className="text-[10px] uppercase text-gray-500 tracking-wider font-semibold pl-2">Active Trips</h3>
+            <p className="text-2xl text-white font-medium pl-2 mt-2">
+              {activeTripsCount.toString().padStart(2, '0')}
+            </p>
+          </div>
+
+          <div className="bg-[#121212] border border-gray-800 rounded-sm p-4 relative overflow-hidden flex flex-col justify-between min-h-[90px]">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+            <h3 className="text-[10px] uppercase text-gray-500 tracking-wider font-semibold pl-2">Pending Trips</h3>
+            <p className="text-2xl text-white font-medium pl-2 mt-2">
+              {pendingTripsCount.toString().padStart(2, '0')}
+            </p>
+          </div>
+
+          <div className="bg-[#121212] border border-gray-800 rounded-sm p-4 relative overflow-hidden flex flex-col justify-between min-h-[90px]">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+            <h3 className="text-[10px] uppercase text-gray-500 tracking-wider font-semibold pl-2">Drivers On Duty</h3>
+            <p className="text-2xl text-white font-medium pl-2 mt-2">
+              {driversOnDutyCount.toString().padStart(2, '0')}
+            </p>
+          </div>
+
+          <div className="bg-[#121212] border border-gray-800 rounded-sm p-4 relative overflow-hidden flex flex-col justify-between min-h-[90px]">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500"></div>
+            <h3 className="text-[10px] uppercase text-gray-500 tracking-wider font-semibold pl-2">Fleet Utilization</h3>
+            <p className="text-2xl text-white font-medium pl-2 mt-2">
+              {fleetUtilization}%
+            </p>
+          </div>
+
+        </div>
+
+        {/* Main Content Area */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          
+          {/* Recent Trips Table */}
+          <div className="lg:col-span-2">
+            <h2 className="text-xs uppercase text-gray-400 font-semibold tracking-wider mb-4">Recent Trips</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-gray-800 text-xs uppercase text-gray-600">
+                    <th className="pb-3 font-medium">Trip</th>
+                    <th className="pb-3 font-medium">Vehicle</th>
+                    <th className="pb-3 font-medium">Driver</th>
+                    <th className="pb-3 font-medium">Status</th>
+                    <th className="pb-3 font-medium">Distance</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800/50">
+                  {recentTrips.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-gray-500">
+                        No recent trips found
+                      </td>
+                    </tr>
+                  ) : (
+                    recentTrips.map((trip) => (
+                      <tr key={trip.id} className="text-gray-300">
+                        <td className="py-4 font-medium text-gray-400">TR{trip.id.substring(trip.id.length - 4).toUpperCase()}</td>
+                        <td className="py-4 text-gray-300">{trip.vehicle?.regNumber || "--"}</td>
+                        <td className="py-4 text-gray-300">{trip.driver?.name || "--"}</td>
+                        <td className="py-4">
+                          <span className={`inline-flex items-center px-3 py-1 rounded text-xs font-medium ${getTripStatusColor(trip.status)}`}>
+                            {getTripStatusLabel(trip.status)}
+                          </span>
+                        </td>
+                        <td className="py-4 text-gray-500">{trip.actualDistance ? `${trip.actualDistance} km` : `${trip.plannedDistance} km (est)`}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
+
+          {/* Vehicle Status */}
           <div>
-            <p className="text-3xl font-bold text-gray-900">84%</p>
-            <p className="text-sm text-green-600 mt-1 font-medium">↑ 4% from last week</p>
-          </div>
-        </div>
+            <h2 className="text-xs uppercase text-gray-400 font-semibold tracking-wider mb-4">Vehicle Status</h2>
+            <div className="space-y-6">
+              
+              <div>
+                <div className="flex justify-between text-sm mb-2 text-gray-300">
+                  <span>Available ({availableCount})</span>
+                </div>
+                <div className="w-full bg-[#1e1e1e] rounded-full h-2.5">
+                  <div className="bg-green-500 h-2.5 rounded-full" style={{ width: `${getPct(availableCount)}%` }}></div>
+                </div>
+              </div>
 
-        {/* Card 2 */}
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Active Vehicles</h3>
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-              </svg>
+              <div>
+                <div className="flex justify-between text-sm mb-2 text-gray-300">
+                  <span>On Trip ({onTripCount})</span>
+                </div>
+                <div className="w-full bg-[#1e1e1e] rounded-full h-2.5">
+                  <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: `${getPct(onTripCount)}%` }}></div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-sm mb-2 text-gray-300">
+                  <span>In Shop ({inShopCount})</span>
+                </div>
+                <div className="w-full bg-[#1e1e1e] rounded-full h-2.5">
+                  <div className="bg-orange-500 h-2.5 rounded-full" style={{ width: `${getPct(inShopCount)}%` }}></div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-sm mb-2 text-gray-300">
+                  <span>Retired ({retiredCount})</span>
+                </div>
+                <div className="w-full bg-[#1e1e1e] rounded-full h-2.5">
+                  <div className="bg-red-400 h-2.5 rounded-full" style={{ width: `${getPct(retiredCount)}%` }}></div>
+                </div>
+              </div>
+
             </div>
           </div>
-          <div className="flex items-end gap-2">
-            <p className="text-3xl font-bold text-gray-900">42</p>
-            <p className="text-gray-500 font-medium mb-1">/ 50 total</p>
-          </div>
-          <p className="text-sm text-gray-500 mt-1">3 currently in shop</p>
+
         </div>
-
-        {/* Card 3 */}
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Active Trips</h3>
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-              </svg>
-            </div>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-gray-900">18</p>
-            <p className="text-sm text-gray-500 mt-1">5 drafts pending dispatch</p>
-          </div>
-        </div>
-
-        {/* Card 4 */}
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Drivers on Duty</h3>
-            <div className="p-2 bg-green-50 rounded-lg">
-              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-              </svg>
-            </div>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-gray-900">38</p>
-            <p className="text-sm text-red-500 mt-1 font-medium">2 alerts (safety/expiry)</p>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Main Content Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Active Trips Table */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-            <h2 className="text-lg font-semibold text-gray-900">Current Dispatches</h2>
-            <Link href="/trips" className="text-sm font-medium text-[#A05C00] hover:text-[#8A5000]">View All</Link>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-white border-b border-gray-100 text-xs uppercase text-gray-400 font-semibold">
-                <tr>
-                  <th className="px-6 py-4">Trip ID</th>
-                  <th className="px-6 py-4">Driver</th>
-                  <th className="px-6 py-4">Vehicle</th>
-                  <th className="px-6 py-4">Destination</th>
-                  <th className="px-6 py-4">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                <tr className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-gray-900">#TRP-4921</td>
-                  <td className="px-6 py-4 flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">JD</div>
-                    John Doe
-                  </td>
-                  <td className="px-6 py-4 text-gray-500">VAN-05</td>
-                  <td className="px-6 py-4">Logistics Center North</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                      Dispatched
-                    </span>
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-gray-900">#TRP-4922</td>
-                  <td className="px-6 py-4 flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">AS</div>
-                    Alice Smith
-                  </td>
-                  <td className="px-6 py-4 text-gray-500">TRK-12</td>
-                  <td className="px-6 py-4">Warehouse C</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                      Dispatched
-                    </span>
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-gray-900">#TRP-4923</td>
-                  <td className="px-6 py-4 flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">RJ</div>
-                    Robert Jones
-                  </td>
-                  <td className="px-6 py-4 text-gray-500">VAN-02</td>
-                  <td className="px-6 py-4">South Branch Port</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                      Draft
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Maintenance / Alerts */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-          <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
-            <h2 className="text-lg font-semibold text-gray-900">Action Needed</h2>
-          </div>
-          <div className="p-6 flex-1">
-            <ul className="space-y-5">
-              <li className="flex items-start gap-4">
-                <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">Vehicle TRK-08 in Shop</p>
-                  <p className="text-sm text-gray-500 mt-0.5">Transmission inspection pending for 2 days. Cost estimated at $850.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">License Expiry Warning</p>
-                  <p className="text-sm text-gray-500 mt-0.5">Driver <span className="font-medium text-gray-700">Alice Smith</span> license expires in 12 days.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">Monthly Expense Report</p>
-                  <p className="text-sm text-gray-500 mt-0.5">Fuel expenses for last month are ready for review.</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-
       </div>
     </div>
   );
 }
+
