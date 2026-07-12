@@ -1,26 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000000;
+  --foreground: #f8fafc;
+  
+  --surface: #09090b;
+  --surface-border: rgba(255, 255, 255, 0.08);
+  --surface-hover: rgba(255, 255, 255, 0.02);
+  
+  --brand-primary: #b48a58;
+  --brand-primary-hover: #a37947;
+  
+  --text-muted: #94a3b8;
+  --text-subtle: #cbd5e1;
+
+  --status-available: #22c55e;
+  --status-on-trip: #3b82f6;
+  --status-in-shop: #f97316;
+  --status-retired: #ef4444;
+  --status-suspended: #f59e0b;
 }
 
 @theme inline {
+  --font-sans: 'Inter', sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-surface: var(--surface);
+  --color-surface-border: var(--surface-border);
+  --color-surface-hover: var(--surface-hover);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-status-available: var(--status-available);
+  --color-status-on-trip: var(--status-on-trip);
+  --color-status-in-shop: var(--status-in-shop);
+  --color-status-retired: var(--status-retired);
+  --color-status-suspended: var(--status-suspended);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+@layer components {
+        .page-container {
+          padding: 2rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+          height: 100%;
+        }
+
+        .top-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #09090b;
+          padding: 1rem;
+          border-radius: 0.75rem;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .table-container {
+          flex: 1;
+          background: #09090b;
+          border-radius: 0.75rem;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          overflow: auto;
+        }
+
+        .data-table {
+          width: 100%;
+          border-collapse: collapse;
+          text-align: left;
+        }
+
+        .data-table th {
+          color: #94a3b8;
+          font-size: 0.75rem;
+          font-weight: 600;
+          letter-spacing: 0.05em;
+          padding: 1rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          text-transform: uppercase;
+        }
+
+        .data-table td {
+          padding: 1rem;
+          color: #f1f5f9;
+          font-size: 0.875rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .data-table tr:hover td {
+          background: rgba(255, 255, 255, 0.02);
+        }
+
+        .empty-state {
+          text-align: center;
+          color: #94a3b8;
+          padding: 3rem !important;
+        }
+
+        /* Status Badges based on reference UI */
+        .status-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 0.25rem 0.75rem;
+          border-radius: 0.375rem;
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: capitalize;
+        }
+        
+        .status-available {
+          background: #22c55e;
+          color: #fff;
+        }
+        
+        .status-on_trip {
+          background: #3b82f6;
+          color: #fff;
+        }
+        
+        .status-in_shop {
+          background: #f97316;
+          color: #fff;
+        }
+        
+        .status-retired {
+          background: #ef4444;
+          color: #fff;
+        }
+
+        .rule-text {
+          font-size: 0.875rem;
+          color: #f59e0b;
+          font-weight: 500;
+        }
 }

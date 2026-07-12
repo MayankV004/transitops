@@ -34,8 +34,12 @@ export function AddVehicleModal() {
 
   if (!isOpen) {
     return (
-      <button onClick={() => setIsOpen(true)} className="btn-primary">
-        + Add Vehicle
+      <button
+        onClick={() => setIsOpen(true)}
+        className="px-4 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center gap-2"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Add Vehicle
       </button>
     );
   }
