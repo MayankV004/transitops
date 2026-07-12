@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { ROLE_LABELS } from "@/lib/rbac-client";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
+import { ExportPDFButton } from "@/components/ui/ExportPDFButton";
 import type { Prisma, VehicleStatus } from "@/generated/prisma/client";
 
 export default async function DashboardPage(props: {
@@ -121,7 +122,8 @@ export default async function DashboardPage(props: {
   return (
     <div className="p-6 max-w-full">
       {/* Top Bar matching the image */}
-      <div className="flex justify-end items-center mb-8">
+      <div className="flex justify-between items-center mb-8">
+        <ExportPDFButton />
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-400">{userName}</span>
           <span className="px-3 py-1 bg-[#1e293b] text-blue-400 border border-blue-900/50 rounded-full text-xs font-medium flex items-center gap-2">
