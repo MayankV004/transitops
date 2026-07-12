@@ -7,7 +7,7 @@ import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { ExportPDFButton } from "@/components/ui/ExportPDFButton";
 import type { Prisma, VehicleStatus } from "@/generated/prisma/client";
 import { getDepotSettings } from "@/actions/settings.actions";
-import { formatDistanceUnit } from "@/lib/settings";
+import { formatDistanceUnit, extractCurrencySymbol } from "@/lib/settings";
 
 export default async function DashboardPage(props: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
@@ -28,6 +28,7 @@ export default async function DashboardPage(props: {
 
   const settings = await getDepotSettings();
   const distanceUnit = formatDistanceUnit(settings.distanceUnit);
+  const currencySymbol = extractCurrencySymbol(settings.currency);
 
   const typeFilter = searchParams.type;
   const statusFilter = searchParams.status;
@@ -128,7 +129,7 @@ export default async function DashboardPage(props: {
     <div className="p-6 max-w-full">
       {/* Top Bar matching the image */}
       <div className="flex justify-between items-center mb-8">
-        <ExportPDFButton />
+        <ExportPDFButton currencySymbol={currencySymbol} distanceUnit={distanceUnit} />
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-400">{userName}</span>
           <span className="px-3 py-1 bg-[#1e293b] text-blue-400 border border-blue-900/50 rounded-full text-xs font-medium flex items-center gap-2">

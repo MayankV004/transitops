@@ -6,7 +6,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { getDetailedReportData, ExportData } from "@/actions/export.actions";
 
-export function ExportPDFButton() {
+export function ExportPDFButton({ currencySymbol, distanceUnit }: { currencySymbol: string, distanceUnit: string }) {
   const [loading, setLoading] = useState(false);
   const [timeRange, setTimeRange] = useState<"month" | "year" | "all">("month");
 
@@ -49,12 +49,12 @@ export function ExportPDFButton() {
       : "0.00";
 
     const summaryBody = [
-      ["Fuel Efficiency", `${fuelEfficiency} km/l`],
+      ["Fuel Efficiency", `${fuelEfficiency} ${distanceUnit}/l`],
       ["Fleet Utilization", `${fleetUtilization}%`],
-      ["Operational Cost", `$${operationalCost.toLocaleString()}`],
+      ["Operational Cost", `${currencySymbol}${operationalCost.toLocaleString()}`],
       ["Vehicle ROI", `${vehicleROI}%`],
-      ["Total Distance", `${summary.totalDistance.toLocaleString()} km`],
-      ["Total Revenue (Est.)", `$${summary.totalRevenue.toLocaleString()}`],
+      ["Total Distance", `${summary.totalDistance.toLocaleString()} ${distanceUnit}`],
+      ["Total Revenue (Est.)", `${currencySymbol}${summary.totalRevenue.toLocaleString()}`],
       ["Total Fuel Consumed", `${summary.totalFuelLiters.toLocaleString()} L`],
     ];
 
@@ -78,7 +78,7 @@ export function ExportPDFButton() {
       v.regNumber,
       t.driver?.name || "N/A",
       t.status,
-      `${t.actualDistance || t.plannedDistance || 0} km`
+      `${t.actualDistance || t.plannedDistance || 0} ${distanceUnit}`
     ]));
 
     autoTable(doc, {
@@ -108,7 +108,7 @@ export function ExportPDFButton() {
           v.regNumber,
           "Expense",
           e.type,
-          `$${e.amount.toLocaleString()}`
+          `${currencySymbol}${e.amount.toLocaleString()}`
         ]);
       });
       v.maintenance.forEach((m) => {
@@ -117,7 +117,7 @@ export function ExportPDFButton() {
           v.regNumber,
           "Maintenance",
           m.description,
-          `$${m.cost.toLocaleString()}`
+          `${currencySymbol}${m.cost.toLocaleString()}`
         ]);
       });
       v.fuelLogs.forEach((f) => {
@@ -126,7 +126,7 @@ export function ExportPDFButton() {
           v.regNumber,
           "Fuel",
           `${f.liters} L`,
-          `$${f.cost.toLocaleString()}`
+          `${currencySymbol}${f.cost.toLocaleString()}`
         ]);
       });
     });

@@ -46,7 +46,7 @@ export default async function ReportsPage() {
     <div className="p-6 max-w-full">
       {/* Top Bar matching the image */}
       <div className="flex justify-between items-center mb-8">
-        <ExportPDFButton />
+        <ExportPDFButton currencySymbol={currencySymbol} distanceUnit={distanceUnit} />
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-400">{userName}</span>
           <span className="px-3 py-1 bg-[#1e293b] text-blue-400 border border-blue-900/50 rounded-full text-xs font-medium flex items-center gap-2">
