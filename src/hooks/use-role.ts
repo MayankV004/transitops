@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
-import { canAccess, ROLE_LABELS, ROLE_PERMISSIONS, type ROLE_COLORS } from "@/lib/rbac";
+import { canAccess, ROLE_LABELS, ROLE_PERMISSIONS, type ROLE_COLORS } from "@/lib/rbac-client";
 import type { Role } from "@/generated/prisma/client";
 
 /**
