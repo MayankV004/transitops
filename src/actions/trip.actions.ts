@@ -148,8 +148,8 @@ export async function completeTrip(tripId: string, finalOdometer: number, fuelCo
           data: {
             vehicleId: trip.vehicleId,
             liters: fuelConsumed,
-            // Simple generic cost, can be enhanced later
-            cost: fuelConsumed * 1.5,
+            // Standard rate: ₹90 per liter
+            cost: fuelConsumed * 90,
           }
         });
       }
