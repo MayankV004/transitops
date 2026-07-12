@@ -8,5 +8,18 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    minPasswordLength: 8,
+  },
+  user: {
+    additionalFields: {
+      // Expose role through the session so server actions can read it
+      // without an extra DB round-trip.
+      role: {
+        type: "string",
+        defaultValue: "DISPATCHER",
+      },
+    },
   },
 });
+
+export type Session = typeof auth.$Infer.Session;
