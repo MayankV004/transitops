@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { canAccess, ROLE_LABELS, ROLE_COLORS } from "@/lib/rbac";
+import { canAccess, ROLE_LABELS, ROLE_COLORS } from "@/lib/rbac-client";
 import type { Role } from "@/generated/prisma/client";
 import type { ReactNode } from "react";
 import { LogoutButton } from "@/components/LogoutButton";
