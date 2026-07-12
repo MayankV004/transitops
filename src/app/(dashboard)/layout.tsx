@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { canAccess, ROLE_LABELS, ROLE_COLORS } from "@/lib/rbac";
 import type { Role } from "@/generated/prisma/client";
 import type { ReactNode } from "react";
+import { LogoutButton } from "@/components/LogoutButton";
 
 // Nav items ordered by importance
 const NAV_ITEMS = [
@@ -148,15 +149,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
               </span>
             </div>
           </div>
-          <form action="/api/auth/sign-out" method="POST">
-            <button type="submit" className="sign-out-btn" id="sign-out-btn" title="Sign out">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M10.5 5.5L13.5 8.5L10.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M13.5 8.5H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <path d="M6 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </button>
-          </form>
+          <LogoutButton />
         </div>
       </aside>
 
