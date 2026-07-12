@@ -28,7 +28,7 @@ function RegisterForm() {
       return;
     }
 
-    const { data, error } = await authClient.signUp.email({
+    const { error } = await authClient.signUp.email({
       name,
       email,
       password,

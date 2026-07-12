@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { canAccess, ROLE_LABELS, ROLE_COLORS } from "@/lib/rbac";
