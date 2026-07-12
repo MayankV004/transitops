@@ -190,3 +190,13 @@ enum TripStatus {
   COMPLETED
   CANCELLED
 }
+
+model DepotSettings {
+  id           String   @id @default("default")
+  depotName    String   @default("My Depot")
+  currency     String   @default("INR (Rs)")
+  distanceUnit String   @default("Kilometers")
+  updatedAt    DateTime @updatedAt
+
+  @@map("depot_settings")
+}

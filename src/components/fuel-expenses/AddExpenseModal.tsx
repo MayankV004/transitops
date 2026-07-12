@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { addExpense } from "@/actions/fuel-expense.actions";
 import type { Vehicle, Trip } from "@/generated/prisma/client";
+import { useSettings } from "@/components/providers/SettingsProvider";
 
 export default function AddExpenseModal({ 
   vehicles, 
@@ -15,6 +16,7 @@ export default function AddExpenseModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState("");
+  const { currencySymbol } = useSettings();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -128,7 +130,7 @@ export default function AddExpenseModal({
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-text-muted">Amount</label>
+                  <label className="text-sm font-medium text-text-muted">Amount ({currencySymbol})</label>
                   <input 
                     type="number" 
                     name="amount" 

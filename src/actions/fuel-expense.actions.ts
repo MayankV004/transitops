@@ -30,7 +30,7 @@ export async function getExpenses() {
 }
 
 export async function logFuel(data: { vehicleId: string; liters: number; cost: number }) {
-  const session = await getSessionOrRedirect();
+  await getSessionOrRedirect();
   // Only Fleet Manager or Dispatcher (or Financial Analyst) can log fuel
   await requireRole(["FLEET_MANAGER", "DISPATCHER", "FINANCIAL_ANALYST"]);
 
@@ -53,7 +53,7 @@ export async function logFuel(data: { vehicleId: string; liters: number; cost: n
 }
 
 export async function addExpense(data: { vehicleId: string; tripId?: string; type: string; amount: number }) {
-  const session = await getSessionOrRedirect();
+  await getSessionOrRedirect();
   await requireRole(["FLEET_MANAGER", "DISPATCHER", "FINANCIAL_ANALYST"]);
 
   const { vehicleId, tripId, type, amount } = data;

@@ -3,10 +3,12 @@
 import { useTransition } from "react";
 import { dispatchTrip, completeTrip, cancelTrip } from "@/actions/trip.actions";
 import { useRouter } from "next/navigation";
+import { useSettings } from "@/components/providers/SettingsProvider";
 
 export default function TripActions({ tripId, status }: { tripId: string, status: string }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const { distanceUnitLabel } = useSettings();
 
   const handleDispatch = () => {
     if (confirm("Are you sure you want to dispatch this trip?")) {
@@ -27,7 +29,7 @@ export default function TripActions({ tripId, status }: { tripId: string, status
   };
 
   const handleComplete = () => {
-    const odo = prompt("Enter final vehicle odometer reading (km):");
+    const odo = prompt(`Enter final vehicle odometer reading (${distanceUnitLabel}):`);
     if (!odo) return;
     
     const fuel = prompt("Enter total fuel consumed (liters):");

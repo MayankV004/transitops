@@ -14,6 +14,7 @@ export const ROLE_PERMISSIONS: Record<Role, string[]> = {
     "maintenance",
     "fuel-expenses",
     "reports",
+    "settings",
   ],
   DISPATCHER: [
     "dashboard",

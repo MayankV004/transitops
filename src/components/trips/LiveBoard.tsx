@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { dispatchTrip, completeTrip, cancelTrip } from "@/actions/trip.actions";
 import Link from "next/link";
+import { useSettings } from "@/components/providers/SettingsProvider";
 
 const statusColors = {
   DRAFT: "bg-surface text-text-subtle border-surface-border",
@@ -24,6 +25,7 @@ interface TripWithRelations {
 
 export default function LiveBoard({ trips }: { trips: TripWithRelations[] }) {
   const [isPending, startTransition] = useTransition();
+  const { distanceUnitLabel } = useSettings();
 
   const handleDispatch = (id: string) => {
     if (confirm("Are you sure you want to dispatch this trip?")) {
@@ -42,7 +44,7 @@ export default function LiveBoard({ trips }: { trips: TripWithRelations[] }) {
   };
 
   const handleComplete = (id: string) => {
-    const odo = prompt("Enter final vehicle odometer reading (km):");
+    const odo = prompt(`Enter final vehicle odometer reading (${distanceUnitLabel}):`);
     if (!odo) return;
     
     const fuel = prompt("Enter total fuel consumed (liters):");

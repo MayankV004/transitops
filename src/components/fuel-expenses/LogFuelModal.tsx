@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { logFuel } from "@/actions/fuel-expense.actions";
 import type { Vehicle } from "@/generated/prisma/client";
+import { useSettings } from "@/components/providers/SettingsProvider";
 
 export default function LogFuelModal({ vehicles }: { vehicles: Vehicle[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { currencySymbol } = useSettings();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -94,7 +96,7 @@ export default function LogFuelModal({ vehicles }: { vehicles: Vehicle[] }) {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-text-muted">Total Cost</label>
+                  <label className="text-sm font-medium text-text-muted">Total Cost ({currencySymbol})</label>
                   <input 
                     type="number" 
                     name="cost" 
