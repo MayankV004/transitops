@@ -29,9 +29,9 @@ export default function ReportsLoading() {
         <div>
           <div className="w-32 h-3 bg-surface rounded mb-6"></div>
           <div className="flex items-end gap-2 h-48">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {[40, 65, 30, 85, 50, 75].map((height, i) => (
               <div key={i} className="flex-1 flex flex-col justify-end items-center h-full">
-                <div className="w-full bg-[#1a2540] rounded-sm" style={{ height: `${20 + Math.random() * 60}%` }}></div>
+                <div className="w-full bg-[#1a2540] rounded-sm" style={{ height: `${height}%` }}></div>
                 <div className="w-8 h-3 bg-surface rounded mt-2"></div>
               </div>
             ))}
