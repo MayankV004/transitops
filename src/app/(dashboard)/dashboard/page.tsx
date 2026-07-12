@@ -3,12 +3,12 @@ import Link from "next/link";
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-[#F5F6F8] p-8 font-sans text-[#1A1A1C]">
+    <div className="page-container">
       {/* Header */}
-      <div className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#111111]">Dashboard Overview</h1>
-          <p className="text-[#555555] mt-1">Welcome back. Here is what is happening with your fleet today.</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard Overview</h1>
+          <p className="text-text-muted text-sm mt-1.5">Welcome back. Here is what is happening with your fleet today.</p>
         </div>
         <div className="flex gap-3">
           <button className="rounded-md bg-white px-4 py-2 text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
