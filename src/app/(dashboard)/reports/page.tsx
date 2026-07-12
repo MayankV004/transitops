@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { ROLE_LABELS } from "@/lib/rbac-client";
+import { getDepotSettings } from "@/actions/settings.actions";
+import { formatDistanceUnit, extractCurrencySymbol } from "@/lib/settings";
 
 export default async function ReportsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -17,6 +19,10 @@ export default async function ReportsPage() {
     .join("")
     .substring(0, 2)
     .toUpperCase();
+
+  const settings = await getDepotSettings();
+  const currencySymbol = extractCurrencySymbol(settings.currency);
+  const distanceUnit = formatDistanceUnit(settings.distanceUnit);
 
   // Fetch data for real values
   const vehicles = await prisma.vehicle.findMany({
@@ -66,7 +72,7 @@ export default async function ReportsPage() {
   const fleetUtilization = totalVehicles > 0 ? Math.round((activeVehicles / totalVehicles) * 100) : 0;
   const operationalCost = totalFuelCost + totalMaintenanceCost + totalExpenses;
   
-  // Assume a standard revenue of $3.50 per km traveled
+  // Assume a standard revenue of 3.50 per unit distance traveled
   const REVENUE_PER_KM = 3.5;
   const totalRevenue = totalDistance * REVENUE_PER_KM;
   const vehicleROI = totalAcquisitionCost > 0 
@@ -132,7 +138,7 @@ export default async function ReportsPage() {
           <div className="bg-[#121212] border border-gray-800 rounded-sm p-5 relative overflow-hidden">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
             <h3 className="text-[10px] uppercase text-gray-500 tracking-wider font-semibold pl-2">Fuel Efficiency</h3>
-            <p className="text-2xl text-white font-medium pl-2 mt-2">{fuelEfficiency} <span className="text-sm text-gray-500">km/l</span></p>
+            <p className="text-2xl text-white font-medium pl-2 mt-2">{fuelEfficiency} <span className="text-sm text-gray-500">{distanceUnit}/l</span></p>
           </div>
 
           <div className="bg-[#121212] border border-gray-800 rounded-sm p-5 relative overflow-hidden">
@@ -144,7 +150,7 @@ export default async function ReportsPage() {
           <div className="bg-[#121212] border border-gray-800 rounded-sm p-5 relative overflow-hidden">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500"></div>
             <h3 className="text-[10px] uppercase text-gray-500 tracking-wider font-semibold pl-2">Operational Cost</h3>
-            <p className="text-2xl text-white font-medium pl-2 mt-2">{operationalCost.toLocaleString()}</p>
+            <p className="text-2xl text-white font-medium pl-2 mt-2">{currencySymbol}{operationalCost.toLocaleString()}</p>
           </div>
 
           <div className="bg-[#121212] border border-gray-800 rounded-sm p-5 relative overflow-hidden">
@@ -170,7 +176,7 @@ export default async function ReportsPage() {
                   <div key={index} className="flex-1 flex flex-col justify-end items-center group relative h-full">
                     {/* Tooltip */}
                     <div className="opacity-0 group-hover:opacity-100 absolute -top-8 bg-gray-800 text-white text-xs py-1 px-2 rounded pointer-events-none transition-opacity z-10 whitespace-nowrap">
-                      ${data.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      {currencySymbol}{data.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </div>
                     {/* Bar Wrapper */}
                     <div className="w-full flex-1 flex flex-col justify-end">
@@ -203,7 +209,7 @@ export default async function ReportsPage() {
                       {/* Dark trailing bar matching the image style */}
                       <div className="h-full bg-gray-800 flex-1 opacity-50"></div>
                     </div>
-                    <span className="text-xs text-gray-500 w-16 text-right">${vehicle.totalCost.toLocaleString()}</span>
+                    <span className="text-xs text-gray-500 w-16 text-right">{currencySymbol}{vehicle.totalCost.toLocaleString()}</span>
                   </div>
                 );
               })}

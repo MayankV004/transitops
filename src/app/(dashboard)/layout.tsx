@@ -6,6 +6,8 @@ import type { Role } from "@/generated/prisma/client";
 import type { ReactNode } from "react";
 import { LogoutButton } from "@/components/LogoutButton";
 import { SidebarNav } from "@/components/SidebarNav";
+import { getDepotSettings } from "@/actions/settings.actions";
+import { SettingsProvider } from "@/components/providers/SettingsProvider";
 
 // Nav items ordered by importance
 const NAV_ITEMS = [
@@ -93,10 +95,22 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    resource: "settings",
+    href: "/settings",
+    label: "Settings",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M9 11.5c1.38 0 2.5-1.12 2.5-2.5s-1.12-2.5-2.5-2.5-2.5 1.12-2.5 2.5 1.12 2.5 2.5 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M14.35 11.4l1.15.82a.5.5 0 0 1 .15.68l-1.5 2.6a.5.5 0 0 1-.6.22l-1.33-.53a5.53 5.53 0 0 1-1.63.94l-.2 1.42a.5.5 0 0 1-.49.43H7.1a.5.5 0 0 1-.49-.43l-.2-1.42a5.53 5.53 0 0 1-1.63-.94l-1.33.53a.5.5 0 0 1-.6-.22l-1.5-2.6a.5.5 0 0 1 .15-.68l1.15-.82A5.44 5.44 0 0 1 2.5 9c0-.49.06-.97.16-1.4L1.5 6.78a.5.5 0 0 1-.15-.68l1.5-2.6a.5.5 0 0 1 .6-.22l1.33.53a5.53 5.53 0 0 1 1.63-.94l.2-1.42A.5.5 0 0 1 7.1 1h2.8a.5.5 0 0 1 .49.43l.2 1.42a5.53 5.53 0 0 1 1.63.94l1.33-.53a.5.5 0 0 1 .6.22l1.5 2.6a.5.5 0 0 1-.15.68l-1.15.82c.1.43.16.91.16 1.4s-.06.97-.16 1.4z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+  },
 ];
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await auth.api.getSession({ headers: await headers() });
+  const settings = await getDepotSettings();
 
   // Belt-and-suspenders: middleware handles this but we double-check in layout
   if (!session?.user) {
@@ -111,10 +125,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const visibleNav = NAV_ITEMS.filter((item) => canAccess(role, item.resource));
 
   return (
-    <div className="shell">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        {/* Logo */}
+    <SettingsProvider settings={settings}>
+      <div className="shell">
+        {/* Sidebar */}
+        <aside className="sidebar">
+          {/* Logo */}
         <div className="sidebar-brand">
           <div className="sidebar-logo">
             <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
@@ -123,7 +138,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
               <path d="M14 6v4M14 18v4" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
-          <span className="sidebar-brand-name">TransitOps</span>
+          <span className="sidebar-brand-name">{settings.depotName}</span>
         </div>
 
         {/* Nav */}
@@ -308,6 +323,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           color: #f1f5f9;
         }
       `}</style>
-    </div>
+      </div>
+    </SettingsProvider>
   );
 }

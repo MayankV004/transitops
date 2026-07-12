@@ -4,6 +4,7 @@ import LogFuelModal from "./LogFuelModal";
 import AddExpenseModal from "./AddExpenseModal";
 import type { FuelLog, Expense, MaintenanceLog, Vehicle, Trip } from "@/generated/prisma/client";
 import { useMemo } from "react";
+import { useSettings } from "@/components/providers/SettingsProvider";
 
 type FuelExpenseBoardProps = {
   fuelLogs: (FuelLog & { vehicle: Vehicle })[];
@@ -24,6 +25,7 @@ export default function FuelExpenseBoard({
   canManage,
   totalOperationalCost
 }: FuelExpenseBoardProps) {
+  const { currencySymbol } = useSettings();
   
   // Aggregate expenses and maintenance logs by Vehicle (or Trip) for the "OTHER EXPENSES" table
   // We'll create a row for each Vehicle that has expenses or maintenance
@@ -128,7 +130,7 @@ export default function FuelExpenseBoard({
                       {log.liters.toLocaleString()} <span className="text-text-muted text-xs">L</span>
                     </td>
                     <td className="py-4 px-4 font-mono text-brand-primary">
-                      ₹{log.cost.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      {currencySymbol}{log.cost.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
                 ))
@@ -174,16 +176,16 @@ export default function FuelExpenseBoard({
                         {row.vehicleName}
                       </td>
                       <td className="py-4 px-4 text-white">
-                        {row.toll > 0 ? `₹${row.toll.toLocaleString()}` : <span className="text-zinc-700">-</span>}
+                        {row.toll > 0 ? `${currencySymbol}${row.toll.toLocaleString()}` : <span className="text-zinc-700">-</span>}
                       </td>
                       <td className="py-4 px-4 text-white">
-                        {row.other > 0 ? `₹${row.other.toLocaleString()}` : <span className="text-zinc-700">-</span>}
+                        {row.other > 0 ? `${currencySymbol}${row.other.toLocaleString()}` : <span className="text-zinc-700">-</span>}
                       </td>
                       <td className="py-4 px-4 text-white">
-                        {row.maintenance > 0 ? `₹${row.maintenance.toLocaleString()}` : <span className="text-zinc-700">-</span>}
+                        {row.maintenance > 0 ? `${currencySymbol}${row.maintenance.toLocaleString()}` : <span className="text-zinc-700">-</span>}
                       </td>
                       <td className="py-4 px-4 font-mono font-medium text-white text-right">
-                        ₹{total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        {currencySymbol}{total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
                       <td className="py-4 px-4 flex justify-center">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
@@ -210,7 +212,7 @@ export default function FuelExpenseBoard({
             Total Operational Cost (Auto) = Fuel + Maintenance
           </div>
           <div className="text-2xl font-bold font-mono text-brand-primary">
-            ₹{totalOperationalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {currencySymbol}{totalOperationalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </div>
         </div>
       </section>

@@ -3,6 +3,8 @@ import { getSessionOrRedirect } from "@/lib/rbac";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import TripActions from "@/components/trips/TripActions";
+import { getDepotSettings } from "@/actions/settings.actions";
+import { formatDistanceUnit } from "@/lib/settings";
 
 const statusColors = {
   DRAFT: "bg-surface text-text-subtle border-surface-border",
@@ -16,7 +18,12 @@ export default async function TripDetailsPage(props: { params: Promise<{ id: str
   await getSessionOrRedirect();
   const params = await props.params;
 
-  const trip = await getTripById(params.id);
+  const [trip, settings] = await Promise.all([
+    getTripById(params.id),
+    getDepotSettings()
+  ]);
+
+  const distanceUnit = formatDistanceUnit(settings.distanceUnit);
 
   if (!trip) {
     notFound();
@@ -76,12 +83,12 @@ export default async function TripDetailsPage(props: { params: Promise<{ id: str
             </div>
             <div>
               <div className="text-xs text-text-muted mb-1">Planned Dist.</div>
-              <div className="text-sm font-mono text-white">{trip.plannedDistance} km</div>
+              <div className="text-sm font-mono text-white">{trip.plannedDistance} {distanceUnit}</div>
             </div>
             {trip.actualDistance !== null && (
               <div>
                 <div className="text-xs text-text-muted mb-1">Actual Dist.</div>
-                <div className="text-sm font-mono text-white">{trip.actualDistance} km</div>
+                <div className="text-sm font-mono text-white">{trip.actualDistance} {distanceUnit}</div>
               </div>
             )}
             {trip.fuelConsumed !== null && (

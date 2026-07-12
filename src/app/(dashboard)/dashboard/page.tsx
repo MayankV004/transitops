@@ -5,6 +5,8 @@ import { headers } from "next/headers";
 import { ROLE_LABELS } from "@/lib/rbac-client";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import type { Prisma, VehicleStatus } from "@/generated/prisma/client";
+import { getDepotSettings } from "@/actions/settings.actions";
+import { formatDistanceUnit } from "@/lib/settings";
 
 export default async function DashboardPage(props: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
@@ -22,6 +24,9 @@ export default async function DashboardPage(props: {
     .join("")
     .substring(0, 2)
     .toUpperCase();
+
+  const settings = await getDepotSettings();
+  const distanceUnit = formatDistanceUnit(settings.distanceUnit);
 
   const typeFilter = searchParams.type;
   const statusFilter = searchParams.status;
@@ -235,7 +240,7 @@ export default async function DashboardPage(props: {
                             {getTripStatusLabel(trip.status)}
                           </span>
                         </td>
-                        <td className="py-4 text-gray-500">{trip.actualDistance ? `${trip.actualDistance} km` : `${trip.plannedDistance} km (est)`}</td>
+                        <td className="py-4 text-gray-500">{trip.actualDistance ? `${trip.actualDistance} ${distanceUnit}` : `${trip.plannedDistance} ${distanceUnit} (est)`}</td>
                       </tr>
                     ))
                   )}

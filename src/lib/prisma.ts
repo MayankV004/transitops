@@ -7,7 +7,8 @@ import ws from 'ws';
 neonConfig.webSocketConstructor = ws;
 
 // To work in edge environments (Cloudflare Workers, Vercel Edge, etc.), enable querying over fetch
-neonConfig.poolQueryViaFetch = true
+// In local development, we disable this to use WebSockets and avoid ETIMEDOUT fetch errors
+neonConfig.poolQueryViaFetch = process.env.NODE_ENV === 'production';
 
 // Type definitions
 declare global {

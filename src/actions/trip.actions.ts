@@ -148,7 +148,7 @@ export async function completeTrip(tripId: string, finalOdometer: number, fuelCo
           data: {
             vehicleId: trip.vehicleId,
             liters: fuelConsumed,
-            // Standard rate: ₹90 per liter
+            // Standard rate: 90 per liter (local currency)
             cost: fuelConsumed * 90,
           }
         });
