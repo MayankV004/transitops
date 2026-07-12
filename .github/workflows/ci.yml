@@ -10,10 +10,10 @@ jobs:
   build-and-check:
     runs-on: ubuntu-latest
 
-    env:
-      # Add dummy environment variables if your Next.js build requires them statically
-      # DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
-      # BETTER_AUTH_SECRET: dummy_secret
+    # Add dummy environment variables if your Next.js build requires them statically
+    # env:
+    #   DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+    #   BETTER_AUTH_SECRET: dummy_secret
 
     steps:
     - name: Checkout repository
