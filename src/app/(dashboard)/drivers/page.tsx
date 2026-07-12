@@ -2,7 +2,7 @@ import { getDrivers } from "@/actions/driver.actions";
 import DriverTable from "@/components/drivers/DriverTable";
 import AddDriverModal from "@/components/drivers/AddDriverModal";
 import { getSessionOrRedirect } from "@/lib/rbac";
-import { ROLE_LABELS, canAccess } from "@/lib/rbac-client";
+import { ROLE_LABELS } from "@/lib/rbac-client";
 import type { Role } from "@/generated/prisma/client";
 
 export default async function Page({

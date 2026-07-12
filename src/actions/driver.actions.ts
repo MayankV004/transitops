@@ -65,7 +65,7 @@ export async function createDriver(data: CreateDriverInput) {
     
     revalidatePath("/drivers");
     return { success: true };
-  } catch (error: unknown) {
+  } catch {
     return { error: "Failed to create driver." };
   }
 }
@@ -86,7 +86,7 @@ export async function updateDriverStatus(driverId: string, status: "AVAILABLE" |
     
     revalidatePath("/drivers");
     return { success: true };
-  } catch (error: unknown) {
+  } catch {
     return { error: "Failed to update driver status." };
   }
 }
