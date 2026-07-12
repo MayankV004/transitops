@@ -30,7 +30,7 @@ function LoginForm() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const { data, error } = await authClient.signIn.email({
+    const { error } = await authClient.signIn.email({
       email,
       password,
     });
@@ -153,7 +153,7 @@ function LoginForm() {
           
           <div className="mt-8 text-center pt-8">
             <p className="text-[0.9rem] text-[#888888]">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/register" className="font-medium text-[#4B7399] hover:text-[#5E8DBA] transition-colors">
                 Register
               </Link>

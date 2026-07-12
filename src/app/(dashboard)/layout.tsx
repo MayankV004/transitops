@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { canAccess, ROLE_LABELS, ROLE_COLORS } from "@/lib/rbac-client";
 import type { Role } from "@/generated/prisma/client";
 import type { ReactNode } from "react";
 import { LogoutButton } from "@/components/LogoutButton";
+import { SidebarNav } from "@/components/SidebarNav";
 
 // Nav items ordered by importance
 const NAV_ITEMS = [
@@ -118,7 +118,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         <div className="sidebar-brand">
           <div className="sidebar-logo">
             <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
-              <rect width="28" height="28" rx="8" fill="#6366f1" />
+              <rect width="28" height="28" rx="8" fill="#b48a58" />
               <path d="M6 14h4M18 14h4M10 14a4 4 0 1 0 8 0 4 4 0 0 0-8 0z" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
               <path d="M14 6v4M14 18v4" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
             </svg>
@@ -127,14 +127,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         </div>
 
         {/* Nav */}
-        <nav className="sidebar-nav" aria-label="Main navigation">
-          {visibleNav.map((item) => (
-            <Link key={item.resource} href={item.href} className="nav-item" id={`nav-${item.resource}`}>
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
-            </Link>
-          ))}
-        </nav>
+        <SidebarNav items={visibleNav} />
 
         {/* User card */}
         <div className="sidebar-footer">
@@ -162,7 +155,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         .shell {
           display: flex;
           min-height: 100vh;
-          background: #070711;
+          background: #000000;
           font-family: 'Inter', 'Geist', system-ui, sans-serif;
         }
 
@@ -172,8 +165,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           flex-shrink: 0;
           display: flex;
           flex-direction: column;
-          background: rgba(10, 10, 25, 0.95);
-          border-right: 1px solid rgba(255, 255, 255, 0.06);
+          background: #09090b;
+          border-right: 1px solid rgba(255, 255, 255, 0.08);
           padding: 1.25rem 0.75rem;
           position: sticky;
           top: 0;
@@ -221,8 +214,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         }
         .nav-item.active,
         .nav-item[aria-current="page"] {
-          background: rgba(99, 102, 241, 0.12);
-          color: #a5b4fc;
+          background: rgba(180, 138, 88, 0.15);
+          color: #d9b891;
         }
         .nav-icon {
           flex-shrink: 0;
@@ -251,7 +244,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           width: 32px;
           height: 32px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          background: linear-gradient(135deg, #b48a58, #8a6538);
           display: flex;
           align-items: center;
           justify-content: center;

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+
 
 // Routes that require authentication (dashboard and all sub-routes)
 const PROTECTED_PATHS = [
