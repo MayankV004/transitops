@@ -67,12 +67,12 @@ export function ExportPDFButton() {
     });
 
     // Detailed Trips
-    let finalY = (doc as any).lastAutoTable.finalY || 55;
+    let finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || 55;
     
     doc.setFontSize(14);
     doc.text("Detailed Trips", 14, finalY + 15);
 
-    const tripsBody = vehicles.flatMap(v => v.trips.map((t: any) => [
+    const tripsBody = vehicles.flatMap(v => v.trips.map((t) => [
       `TR${t.id.substring(t.id.length - 4).toUpperCase()}`,
       new Date(t.createdAt).toLocaleDateString(),
       v.regNumber,
@@ -90,7 +90,7 @@ export function ExportPDFButton() {
     });
 
     // Detailed Expenses
-    finalY = (doc as any).lastAutoTable.finalY || 55;
+    finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || 55;
     if (finalY > 250) {
       doc.addPage();
       finalY = 10;
@@ -99,10 +99,10 @@ export function ExportPDFButton() {
     doc.setFontSize(14);
     doc.text("Detailed Expenses & Maintenance", 14, finalY + 15);
 
-    const expensesBody: any[] = [];
+    const expensesBody: Array<string[]> = [];
     
     vehicles.forEach(v => {
-      v.expenses.forEach((e: any) => {
+      v.expenses.forEach((e) => {
         expensesBody.push([
           new Date(e.date).toLocaleDateString(),
           v.regNumber,
@@ -111,7 +111,7 @@ export function ExportPDFButton() {
           `$${e.amount.toLocaleString()}`
         ]);
       });
-      v.maintenance.forEach((m: any) => {
+      v.maintenance.forEach((m) => {
         expensesBody.push([
           new Date(m.date).toLocaleDateString(),
           v.regNumber,
@@ -120,7 +120,7 @@ export function ExportPDFButton() {
           `$${m.cost.toLocaleString()}`
         ]);
       });
-      v.fuelLogs.forEach((f: any) => {
+      v.fuelLogs.forEach((f) => {
         expensesBody.push([
           new Date(f.date).toLocaleDateString(),
           v.regNumber,
@@ -148,7 +148,7 @@ export function ExportPDFButton() {
     <div className="flex items-center gap-3">
       <select
         value={timeRange}
-        onChange={(e) => setTimeRange(e.target.value as any)}
+        onChange={(e) => setTimeRange(e.target.value as "month" | "year" | "all")}
         className="bg-[#121212] border border-gray-800 text-gray-300 text-sm rounded px-3 py-2 focus:outline-none focus:border-gray-600 appearance-none min-w-[120px]"
         disabled={loading}
       >
