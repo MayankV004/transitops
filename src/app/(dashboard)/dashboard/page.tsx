@@ -1,5 +1,4 @@
 import React from "react";
-import { Search } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
