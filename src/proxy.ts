@@ -10,6 +10,7 @@ const PROTECTED_PATHS = [
   "/maintenance",
   "/fuel-expenses",
   "/reports",
+  "/settings",
 ];
 
 // Routes only accessible to unauthenticated users (redirect logged-in users away)

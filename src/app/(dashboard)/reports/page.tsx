@@ -1,9 +1,9 @@
 import React from "react";
-import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { ROLE_LABELS } from "@/lib/rbac-client";
 import { getDepotSettings } from "@/actions/settings.actions";
+import { getReportsData } from "@/actions/reports.actions";
 import { formatDistanceUnit, extractCurrencySymbol } from "@/lib/settings";
 import { ExportPDFButton } from "@/components/ui/ExportPDFButton";
 
@@ -21,101 +21,25 @@ export default async function ReportsPage() {
     .substring(0, 2)
     .toUpperCase();
 
-  const settings = await getDepotSettings();
+  const [settings, data] = await Promise.all([
+    getDepotSettings(),
+    getReportsData(),
+  ]);
+
   const currencySymbol = extractCurrencySymbol(settings.currency);
   const distanceUnit = formatDistanceUnit(settings.distanceUnit);
 
-  // Fetch data for real values
-  const vehicles = await prisma.vehicle.findMany({
-    where: { status: { not: "RETIRED" } },
-    include: {
-      fuelLogs: true,
-      maintenance: true,
-      expenses: true,
-      trips: {
-        where: { status: "COMPLETED" },
-      },
-    },
-  });
+  const {
+    fuelEfficiency,
+    fleetUtilization,
+    operationalCost,
+    vehicleROI,
+    monthsData,
+    maxRevenue,
+    sortedVehicles,
+    maxVehicleCost,
+  } = data;
 
-  const totalVehicles = await prisma.vehicle.count({ where: { status: { not: "RETIRED" } } });
-  const activeVehicles = await prisma.vehicle.count({ where: { status: "ON_TRIP" } });
-  
-  const vehicleStats = vehicles.map((v) => {
-    const vDistance = v.trips.reduce((acc, t) => acc + (t.actualDistance || t.plannedDistance || 0), 0);
-    const vFuelLiters = v.fuelLogs.reduce((acc, f) => acc + f.liters, 0);
-    const vFuelCost = v.fuelLogs.reduce((acc, f) => acc + f.cost, 0);
-    const vMaintenanceCost = v.maintenance.reduce((acc, m) => acc + m.cost, 0);
-    const vExpenses = v.expenses.reduce((acc, e) => acc + e.amount, 0);
-    
-    const totalCost = vFuelCost + vMaintenanceCost + vExpenses;
-    return {
-      regNumber: v.regNumber,
-      totalCost,
-      vDistance,
-      vFuelLiters,
-      vFuelCost,
-      vMaintenanceCost,
-      vExpenses,
-      acquisitionCost: v.acquisitionCost
-    };
-  });
-
-  const totalDistance = vehicleStats.reduce((acc, v) => acc + v.vDistance, 0);
-  const totalFuelLiters = vehicleStats.reduce((acc, v) => acc + v.vFuelLiters, 0);
-  const totalFuelCost = vehicleStats.reduce((acc, v) => acc + v.vFuelCost, 0);
-  const totalMaintenanceCost = vehicleStats.reduce((acc, v) => acc + v.vMaintenanceCost, 0);
-  const totalAcquisitionCost = vehicleStats.reduce((acc, v) => acc + v.acquisitionCost, 0);
-  const totalExpenses = vehicleStats.reduce((acc, v) => acc + v.vExpenses, 0);
-
-  // Calculate top-level metrics
-  const fuelEfficiency = totalFuelLiters > 0 ? (totalDistance / totalFuelLiters).toFixed(1) : "0.0";
-  const fleetUtilization = totalVehicles > 0 ? Math.round((activeVehicles / totalVehicles) * 100) : 0;
-  const operationalCost = totalFuelCost + totalMaintenanceCost + totalExpenses;
-  
-  // Assume a standard revenue of 3.50 per unit distance traveled
-  const REVENUE_PER_KM = 3.5;
-  const totalRevenue = totalDistance * REVENUE_PER_KM;
-  const vehicleROI = totalAcquisitionCost > 0 
-    ? (((totalRevenue - operationalCost) / totalAcquisitionCost) * 100).toFixed(1)
-    : "0.0";
-
-  // Calculate monthly revenue for the last 6 months
-  const now = new Date();
-  const monthsData = Array.from({ length: 6 }).map((_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
-    return {
-      month: d.toLocaleString('default', { month: 'short' }),
-      revenue: 0,
-      year: d.getFullYear(),
-      monthNum: d.getMonth()
-    };
-  });
-
-  const allCompletedTrips = await prisma.trip.findMany({
-    where: { status: "COMPLETED" },
-    select: { completedAt: true, createdAt: true, actualDistance: true, plannedDistance: true }
-  });
-
-  allCompletedTrips.forEach(trip => {
-    const date = trip.completedAt || trip.createdAt;
-    const distance = trip.actualDistance || trip.plannedDistance || 0;
-    const revenue = distance * REVENUE_PER_KM;
-    
-    const tripMonth = date.getMonth();
-    const tripYear = date.getFullYear();
-    
-    const monthData = monthsData.find(m => m.monthNum === tripMonth && m.year === tripYear);
-    if (monthData) {
-      monthData.revenue += revenue;
-    }
-  });
-
-  const maxRevenue = Math.max(...monthsData.map(m => m.revenue), 1000); // ensure at least > 0
-
-  // Top costliest vehicles
-  const sortedVehicles = vehicleStats.sort((a, b) => b.totalCost - a.totalCost).slice(0, 3);
-  const maxVehicleCost = sortedVehicles.length > 0 ? Math.max(sortedVehicles[0].totalCost, 1) : 1;
   const colors = ['bg-red-400', 'bg-orange-500', 'bg-blue-500'];
 
   return (
@@ -172,13 +96,13 @@ export default async function ReportsPage() {
           <div>
             <h2 className="text-xs uppercase text-gray-400 font-semibold tracking-wider mb-6">Monthly Revenue</h2>
             <div className="flex items-end gap-2 h-48 pt-6">
-              {monthsData.map((data, index) => {
-                const heightPct = Math.max((data.revenue / maxRevenue) * 100, 5); // min 5% height for visibility
+              {monthsData.map((monthData, index) => {
+                const heightPct = Math.max((monthData.revenue / maxRevenue) * 100, 5);
                 return (
                   <div key={index} className="flex-1 flex flex-col justify-end items-center group relative h-full">
                     {/* Tooltip */}
                     <div className="opacity-0 group-hover:opacity-100 absolute -top-8 bg-gray-800 text-white text-xs py-1 px-2 rounded pointer-events-none transition-opacity z-10 whitespace-nowrap">
-                      {currencySymbol}{data.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      {currencySymbol}{monthData.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </div>
                     {/* Bar Wrapper */}
                     <div className="w-full flex-1 flex flex-col justify-end">
@@ -188,7 +112,7 @@ export default async function ReportsPage() {
                       ></div>
                     </div>
                     {/* Month Label */}
-                    <span className="text-[10px] text-gray-500 mt-2 uppercase h-4 shrink-0">{data.month}</span>
+                    <span className="text-[10px] text-gray-500 mt-2 uppercase h-4 shrink-0">{monthData.month}</span>
                   </div>
                 );
               })}
